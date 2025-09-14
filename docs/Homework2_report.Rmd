@@ -1,0 +1,185 @@
+---
+title: "Homework 2 Report"
+output: html_document
+---
+
+
+## Name
+
+Maya Glenn
+
+### Setup
+
+Read in the data with `read_csv()` and store the data as an R object named `dataset`. Check the data to make sure all of the expected observations and variables are there.
+
+
+```{r}
+## Load the data and any necessary packages here.
+library(tidyverse)
+library(dplyr)
+dataset <- read.csv("/Users/mayaglenn/SDS375/homework2/MAACS/maacs.csv.gz")
+
+# Check the data
+dim(dataset)
+head(dataset)    
+```
+
+## Part 1
+
+We will first consider the relationship between FEV1 and age. In general, it is expected that as children get older (and hence, larger in size), their FEV1 values should get higher. 
+
+Consider the statement "FEV1 values in children are higher in older children relative to younger children". 
+
+Write a function in R that takes the `dataset` object as an argument and returns `TRUE` if the statement above is true for the dataset and `FALSE` otherwise. 
+
+NOTE: In order to write this function, you will need to translate the statement above into something that can be checked with the data. There are many ways in which you can do that translation correctly and you only need to pick one way here. 
+
+NOTE: For this part, do not use any plots.
+
+```{r}
+## Write your function here
+
+fev1_func <- function(dataset) {
+  model <- lm(fev1 ~ age, data = dataset)
+  slope <- unname(coef(model)["age"])
+  return(slope > 0)
+}
+
+```
+
+Based on the slope of the regression of fev1 on age, it is `r fev1_func(dataset)` that
+FEV1 values in children are higher in older children relative to younger children. 
+
+## Part 2
+
+Fit a linear regression model with FEV1 as the outcome and age as a predictor.
+
+How much does FEV1 change for a 1-year increase in the child's age? 
+
+```{r}
+## Add your code here
+
+model <- lm(fev1 ~ age, data = dataset)
+slope <- coef(model)["age"]
+
+```
+
+
+Write your data analysis statement interpreting the regression model here:
+
+On average, for a 1-year increase in the child's age, FEV1 increases by `r slope` liters.
+
+## Part 3
+
+Develop **three** supporting premises derived from the data that support the statement you wrote in Part 2. These can be plots, other summary statistics, or model results.
+
+NOTE: At least one supporting premise should use a plot.
+
+```{r}
+## Add your code here
+
+#premise one: summary statistics 
+summary(model)
+
+#premise two: correlation
+cor(dataset$age, dataset$fev1, use = "complete.obs")
+
+#premise three: plot
+plot(dataset$age, dataset$fev1,
+     xlab = "Age (years)", ylab = "FEV1 (liters)",
+     main = "Relationship between Age and FEV1")
+abline(model, col = "blue", lwd = 2)
+
+
+```
+
+
+Write the three supporting premise statements here:
+
+1. The linear regression model indicates that the slope for age is positive, and the corresponding p-value is statistically significant, which supports the conclusion that FEV1 increases as children grow older.
+
+2. The correlation between age and FEV1 is strong and positive, meaning there is a direct association between higher age and higher FEV1 values in the dataset.
+
+3. A scatter plot of FEV1 against age, with the fitted regression line overlaid, clearly shows an upward trend, confirming that older children tend to have greater FEV1 values compared to younger children.
+
+
+## Part 4
+
+For each of the supporting premises above, write a function that takes the `dataset` object as an argument and returns `TRUE` if the supporting premise statement above is true for the dataset and `FALSE` otherwise. 
+
+For statements involving plots, instead of returning `TRUE` or `FALSE`, you function should do two things:
+
+1. Produce the plot that is used in the statement
+
+2. Produce a hypothetical version of the plot in the event that the statement is true. This can be done using simulated data or by simply hand drawing a plot.
+
+
+```{r}
+## Function for supporting premise statement 1
+
+summary_func <- function(dataset) {
+  model <- lm(fev1 ~ age, data = dataset)
+  slope <- unname(coef(model)["age"])
+  p <- unname(summary(model)$coefficients["age", "Pr(>|t|)"])
+  return(slope > 0 & p < 0.01)
+}
+
+```
+
+
+```{r}
+## Function for supporting premise statement 2
+
+correlation_func <- function(dataset) {
+  correlation <- cor(dataset$age, dataset$fev1, use = "complete.obs")
+  return(correlation>0)
+}
+```
+
+
+```{r}
+## Function for supporting premise statement 3
+
+plot_func <- function(dataset) {
+  #actual plot
+  plot(dataset$age, dataset$fev1,
+       xlab = "Age (years)", ylab = "FEV1 (liters)",
+       main = "Relationship between Age and FEV1")
+  abline(lm(fev1 ~ age, data = dataset), col = "blue", lwd = 2)
+  
+  # Hypothetical plot that simulates what "true" would look like
+  age_sim <- seq(min(dataset$age), max(dataset$age), length.out = 50)
+  fev1_sim <- 0.5 * age_sim + rnorm(50, mean = 0, sd = 0.5) 
+  plot(age_sim, fev1_sim,
+       xlab = "Age (years)", ylab = "FEV1 (liters)",
+       main = "Hypothetical Relationship if Statement is True")
+  abline(lm(fev1_sim ~ age_sim), col = "red", lwd = 2)
+}
+
+```
+
+Execute each of your function and show that the produce the expected output.
+
+```{r}
+summary_func(dataset)
+correlation_func(dataset)
+plot_func(dataset)
+```
+
+All functions produce the expected output. 
+
+Function 1 checks to make sure the slope is positive and the p-value is less than 0.01, confirming that premise one is `r summary_func(dataset)`.
+
+Function 2 checks to make sure the correlation is positive, confirming that  premise two is `r correlation_func(dataset)`. 
+
+Function 3 plots the relationship between age and fev1, and shows the regression line in blue, confirming that the relationship is positive. It also simulates a plot with a positive relationship between the two variables, in the case that the premise is true.  
+
+## Part 5
+
+Describe one alternative to the primary statement "FEV1 values in children are higher in older children relative to younger children". 
+
+Create a fault tree for the alternative outcome describing how the alternative outcome could be realized in the data even if the primary statement were true.
+
+Your fault tree should be created as a separate image and does not need to be created in R. Upload the image of the fault tree to Canvas.
+
+
