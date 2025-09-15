@@ -17,7 +17,7 @@ Read in the data with `read_csv()` and store the data as an R object named `data
 ## Load the data and any necessary packages here.
 library(tidyverse)
 library(dplyr)
-dataset <- read.csv("/Users/mayaglenn/SDS375/homework2/MAACS/maacs.csv.gz")
+dataset <- read.csv("/Users/mayaglenn/SDS375/homework2/MAACS/docs/maacs.csv.gz")
 
 # Check the data
 dim(dataset)
@@ -40,15 +40,20 @@ NOTE: For this part, do not use any plots.
 ## Write your function here
 
 fev1_func <- function(dataset) {
-  model <- lm(fev1 ~ age, data = dataset)
-  slope <- unname(coef(model)["age"])
-  return(slope > 0)
+  # Find the median age
+  median_age <- median(dataset$age, na.rm = TRUE)
+  
+  # Split into younger and older groups
+  younger <- dataset$fev1[dataset$age <= median_age]
+  older <- dataset$fev1[dataset$age > median_age]
+  
+  # Compare mean FEV1 values
+  return(mean(older, na.rm = TRUE) > mean(younger, na.rm = TRUE))
 }
 
 ```
 
-Based on the slope of the regression of fev1 on age, it is `r fev1_func(dataset)` that
-FEV1 values in children are higher in older children relative to younger children. 
+The dataset was split into younger and older groups based on the median age, and by comparing the average FEV1 values of each group, it is `r fev1_func(dataset)` that older children have higher FEV1 values than younger children.
 
 ## Part 2
 
@@ -78,8 +83,9 @@ NOTE: At least one supporting premise should use a plot.
 ```{r}
 ## Add your code here
 
-#premise one: summary statistics 
-summary(model)
+#premise one: significant p-value
+unname(summary(model)$coefficients["age", "Pr(>|t|)"])
+
 
 #premise two: correlation
 cor(dataset$age, dataset$fev1, use = "complete.obs")
@@ -96,11 +102,11 @@ abline(model, col = "blue", lwd = 2)
 
 Write the three supporting premise statements here:
 
-1. The linear regression model indicates that the slope for age is positive, and the corresponding p-value is statistically significant, which supports the conclusion that FEV1 increases as children grow older.
+1. The p value is less than 2e-16, which is also less than an Alpha of 0.01 or 0.05. This indicates that the positive relationship between age and FEV1 is statistically significant.
 
-2. The correlation between age and FEV1 is strong and positive, meaning there is a direct association between higher age and higher FEV1 values in the dataset.
+2. The correlation between age and FEV1 is strong and positive, indicating that there is a direct positive association between age and FEV1. 
 
-3. A scatter plot of FEV1 against age, with the fitted regression line overlaid, clearly shows an upward trend, confirming that older children tend to have greater FEV1 values compared to younger children.
+3. The plot illustrates a positive trend among the data points, where as age increases, so do the FEV1 levels. 
 
 
 ## Part 4
@@ -168,7 +174,7 @@ plot_func(dataset)
 
 All functions produce the expected output. 
 
-Function 1 checks to make sure the slope is positive and the p-value is less than 0.01, confirming that premise one is `r summary_func(dataset)`.
+Function 1 checks to make sure that the p-value is less than 0.01 (and that the slope is positive), which confirms that premise one is `r summary_func(dataset)`.
 
 Function 2 checks to make sure the correlation is positive, confirming that  premise two is `r correlation_func(dataset)`. 
 
